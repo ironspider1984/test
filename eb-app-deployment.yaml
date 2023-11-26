@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app-deployment
+spec:
+  replicas: 4 # Четыре пода справляются с пиковой нагрузкой
+  selector:
+    matchLabels:
+      app: web-app
+  template:
+    metadata:
+      labels:
+        app: web-app
+    spec:
+      containers:
+      - name: web-app-container
+        image: your-web-app-image:latest
+        resources:
+          requests:
+            memory: "256Mi" # Начальные требования по памяти
+            cpu: "1" # Начальные требования по CPU
+          limits:
+            memory: "256Mi"
+            cpu: "1"
+        readinessProbe:
+          httpGet:
+            path: /health # Проверка готовности приложения
+            port: 80
+          initialDelaySeconds: 10 # Инициальная задержка перед первой проверкой
+          periodSeconds: 5 # Интервал проверок
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-app-service
+spec:
+  selector:
+    app: web-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP # Может быть изменено в зависимости от потребностей
